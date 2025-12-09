@@ -12,7 +12,7 @@ const errorMessage = document.getElementById('errorMessage');
 let models = [];
 let sentenceCount = 0;
 
-// 초기화
+// Initialize
 async function initialize() {
     await loadModels();
     addSentenceInput();
@@ -20,7 +20,7 @@ async function initialize() {
     setupEventListeners();
 }
 
-// 모델 목록 로드
+// Load model list
 async function loadModels() {
     try {
         const response = await fetch('/api/embedding/models');
@@ -28,12 +28,12 @@ async function loadModels() {
         models = data.models;
         renderModelCheckboxes();
     } catch (error) {
-        showError('모델 목록을 불러오는데 실패했습니다.');
+        showError('Failed to load model list.');
         console.error('Error loading models:', error);
     }
 }
 
-// 모델 체크박스 렌더링
+// Render model checkboxes
 function renderModelCheckboxes() {
     modelCheckboxesContainer.innerHTML = models.map((model, index) => `
         <label class="model-checkbox selected" data-model="${model.name}">
@@ -50,7 +50,7 @@ function renderModelCheckboxes() {
         </label>
     `).join('');
 
-    // 체크박스 이벤트 리스너 추가
+    // Add checkbox event listeners
     document.querySelectorAll('.model-checkbox').forEach(checkbox => {
         checkbox.addEventListener('click', (e) => {
             const input = checkbox.querySelector('input');
@@ -60,7 +60,7 @@ function renderModelCheckboxes() {
     });
 }
 
-// 문장 입력 필드 추가
+// Add sentence input field
 function addSentenceInput() {
     sentenceCount++;
     const wrapper = document.createElement('div');
@@ -68,14 +68,14 @@ function addSentenceInput() {
     wrapper.dataset.index = sentenceCount;
     
     wrapper.innerHTML = `
-        <span class="sentence-label">문장 ${sentenceCount}</span>
+        <span class="sentence-label">Sentence ${sentenceCount}</span>
         <input 
             type="text" 
             class="sentence-input" 
-            placeholder="비교할 문장을 입력하세요..."
+            placeholder="Enter a sentence to compare..."
             data-index="${sentenceCount}"
         >
-        <button type="button" class="btn-remove" title="삭제">
+        <button type="button" class="btn-remove" title="Remove">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -85,21 +85,21 @@ function addSentenceInput() {
     
     sentenceInputsContainer.appendChild(wrapper);
     
-    // 삭제 버튼 이벤트
+    // Remove button event
     wrapper.querySelector('.btn-remove').addEventListener('click', () => {
         removeSentenceInput(wrapper);
     });
     
-    // 새로 추가된 입력 필드에 포커스
+    // Focus on newly added input field
     wrapper.querySelector('.sentence-input').focus();
 }
 
-// 문장 입력 필드 삭제
+// Remove sentence input field
 function removeSentenceInput(wrapper) {
     const inputs = sentenceInputsContainer.querySelectorAll('.sentence-input-wrapper');
     
     if (inputs.length <= 2) {
-        showError('최소 2개의 문장이 필요합니다.');
+        showError('At least 2 sentences are required.');
         return;
     }
     
@@ -107,53 +107,54 @@ function removeSentenceInput(wrapper) {
     updateSentenceLabels();
 }
 
-// 문장 라벨 업데이트
+// Update sentence labels
+
 function updateSentenceLabels() {
     const wrappers = sentenceInputsContainer.querySelectorAll('.sentence-input-wrapper');
     wrappers.forEach((wrapper, index) => {
         const label = wrapper.querySelector('.sentence-label');
         const input = wrapper.querySelector('.sentence-input');
-        label.textContent = `문장 ${index + 1}`;
+        label.textContent = `Sentence ${index + 1}`;
         input.dataset.index = index + 1;
     });
     sentenceCount = wrappers.length;
 }
 
-// 이벤트 리스너 설정
+// Setup event listeners
 function setupEventListeners() {
     addSentenceBtn.addEventListener('click', addSentenceInput);
     executeBtn.addEventListener('click', executeComparison);
 }
 
-// 유사도 비교 실행
+// Execute similarity comparison
 async function executeComparison() {
-    // 선택된 모델 수집
+    // Collect selected models
     const selectedModels = Array.from(document.querySelectorAll('.model-checkbox.selected input'))
         .map(input => input.value);
     
-    // 입력된 문장 수집
+    // Collect input sentences
     const sentences = Array.from(document.querySelectorAll('.sentence-input'))
         .map(input => input.value.trim());
     
     // Validation
     if (selectedModels.length === 0) {
-        showError('최소 1개 이상의 모델을 선택해주세요.');
+        showError('Please select at least one model.');
         return;
     }
     
     if (sentences.length < 2) {
-        showError('최소 2개 이상의 문장이 필요합니다.');
+        showError('At least 2 sentences are required.');
         return;
     }
     
     const emptyIndex = sentences.findIndex(s => !s);
     if (emptyIndex !== -1) {
-        showError(`문장 ${emptyIndex + 1}이(가) 비어있습니다.`);
+        showError(`Sentence ${emptyIndex + 1} is empty.`);
         document.querySelectorAll('.sentence-input')[emptyIndex].focus();
         return;
     }
     
-    // 로딩 상태
+    // Loading state
     setLoading(true);
     
     try {
@@ -170,7 +171,7 @@ async function executeComparison() {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.detail || '분석 중 오류가 발생했습니다.');
+            throw new Error(errorData.detail || 'An error occurred during analysis.');
         }
         
         const data = await response.json();
@@ -184,7 +185,7 @@ async function executeComparison() {
     }
 }
 
-// 결과 렌더링
+// Render results
 function renderResults(data) {
     resultsSection.style.display = 'block';
     
@@ -196,22 +197,22 @@ function renderResults(data) {
             </div>
             
             <div class="similarity-table-wrapper">
-                <h3 style="font-size: 0.95rem; color: var(--color-text-primary); margin-bottom: 0.75rem; font-weight: 500;">코사인 유사도 (Cosine Similarity)</h3>
+                <h3 style="font-size: 0.95rem; color: var(--color-text-primary); margin-bottom: 0.75rem; font-weight: 500;">Cosine Similarity</h3>
                 ${renderSimilarityTable(result.cosine_similarity, data.sentences, 'cosine')}
             </div>
             
             <div class="similarity-table-wrapper" style="margin-top: 1.5rem;">
-                <h3 style="font-size: 0.95rem; color: var(--color-text-primary); margin-bottom: 0.75rem; font-weight: 500;">유클리디언 거리 (Euclidean Distance)</h3>
+                <h3 style="font-size: 0.95rem; color: var(--color-text-primary); margin-bottom: 0.75rem; font-weight: 500;">Euclidean Distance</h3>
                 ${renderSimilarityTable(result.normalized_euclidean_distance, data.sentences, 'normalized_euclidean')}
             </div>
         </div>
     `).join('');
     
-    // 결과 섹션으로 스크롤
+    // Scroll to results section
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// 유사도 테이블 렌더링
+// Render similarity table
 function renderSimilarityTable(matrix, sentences, metricType) {
     const truncate = (str, maxLen = 30) => {
         return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
@@ -221,12 +222,12 @@ function renderSimilarityTable(matrix, sentences, metricType) {
         if (i === j) return 'diagonal';
         
         if (metricType === 'cosine') {
-            // 코사인 유사도: 높을수록 유사 (0~1)
+            // Cosine similarity: higher is more similar (0~1)
             if (value >= 0.8) return 'high-similarity';
             if (value >= 0.5) return 'medium-similarity';
             return 'low-similarity';
         } else {
-            // 유클리디언 거리: 낮을수록 유사 (정규화된 경우 0~2 범위)
+            // Euclidean distance: lower is more similar (normalized range 0~2)
             if (value <= 0.5) return 'high-similarity';
             if (value <= 1.0) return 'medium-similarity';
             return 'low-similarity';
@@ -235,17 +236,17 @@ function renderSimilarityTable(matrix, sentences, metricType) {
     
     let html = '<table class="similarity-table">';
     
-    // 헤더
+    // Header
     html += '<thead><tr><th></th>';
     sentences.forEach((s, i) => {
-        html += `<th class="sentence-header" title="${escapeHtml(s)}">문장 ${i + 1}</th>`;
+        html += `<th class="sentence-header" title="${escapeHtml(s)}">Sentence ${i + 1}</th>`;
     });
     html += '</tr></thead>';
     
-    // 바디
+    // Body
     html += '<tbody>';
     matrix.forEach((row, i) => {
-        html += `<tr><th class="sentence-header" title="${escapeHtml(sentences[i])}">문장 ${i + 1}</th>`;
+        html += `<tr><th class="sentence-header" title="${escapeHtml(sentences[i])}">Sentence ${i + 1}</th>`;
         row.forEach((value, j) => {
             const similarityClass = getSimilarityClass(value, i, j, metricType);
             html += `<td class="${similarityClass}">${value.toFixed(4)}</td>`;
@@ -256,13 +257,13 @@ function renderSimilarityTable(matrix, sentences, metricType) {
     
     html += '</table>';
     
-    // 문장 목록은 첫 번째 테이블에만 추가
+    // Add sentence list only to the first table
     if (metricType === 'cosine') {
         html += '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border);">';
-        html += '<div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">입력 문장:</div>';
+        html += '<div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">Input Sentences:</div>';
         sentences.forEach((s, i) => {
             html += `<div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">
-                <span style="color: var(--color-accent);">문장 ${i + 1}:</span> ${escapeHtml(s)}
+                <span style="color: var(--color-accent);">Sentence ${i + 1}:</span> ${escapeHtml(s)}
             </div>`;
         });
         html += '</div>';
@@ -271,7 +272,7 @@ function renderSimilarityTable(matrix, sentences, metricType) {
     return html;
 }
 
-// 로딩 상태 설정
+// Set loading state
 function setLoading(loading) {
     executeBtn.disabled = loading;
     const btnText = executeBtn.querySelector('.btn-text');
@@ -286,7 +287,7 @@ function setLoading(loading) {
     }
 }
 
-// 에러 토스트 표시
+// Show error toast
 function showError(message) {
     errorMessage.textContent = message;
     errorToast.style.display = 'block';
@@ -296,13 +297,13 @@ function showError(message) {
     }, 4000);
 }
 
-// HTML 이스케이프
+// HTML escape
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// 페이지 로드 시 초기화
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', initialize);
 
